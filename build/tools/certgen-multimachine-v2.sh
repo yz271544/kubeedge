@@ -3,8 +3,11 @@
 # sudo build/tools/certgen-multimachine.sh buildSecret 192.168.241.1 192.168.122.1 172.16.45.1 10.136.76.187
 
 # export CLOUDCOREIPS=(192.168.0.139 192.168.0.140 192.168.0.141)
-# sudo ./certgen-multimachine.sh buildSecret ${CLOUDCOREIPS[*]} > ./06-secret.yaml
-# sudo ./certgen-multimachine.sh stream ${CLOUDCOREIPS[*]} >> ./06-secret.yaml
+# sudo ./certgen-multimachine-v2.sh buildSecret ${CLOUDCOREIPS[*]} > ./06-secret.yaml
+# sudo ./certgen-multimachine-v2.sh stream ${CLOUDCOREIPS[*]} >> ./06-secret.yaml
+
+# sudo ./certgen-multimachine-v2.sh buildSecret 192.168.0.139 192.168.0.140 192.168.0.141 > ./06-secret.yaml
+# sudo ./certgen-multimachine-v2.sh stream 192.168.0.139 192.168.0.140 192.168.0.141 >> ./06-secret.yaml
 
 set -o errexit
 
@@ -106,12 +109,6 @@ streamCert() {
 stream() {
     local IPs=(${@})
     ensureFolder
-#    readonly streamsubject=${SUBJECT:-/C=CN/ST=Zhejiang/L=Hangzhou/O=KubeEdge}
-#    readonly STREAM_KEY_FILE=${certPath}/stream.key
-#    readonly STREAM_CSR_FILE=${certPath}/stream.csr
-#    readonly STREAM_CRT_FILE=${certPath}/stream.crt
-#    readonly K8SCA_FILE=/etc/kubernetes/pki/ca.crt
-#    readonly K8SCA_KEY_FILE=/etc/kubernetes/pki/ca.key
 
     if [ ${#IPs[@]} -eq 0 ]; then
         echo "You must set CLOUDCOREIPS Env,The environment variable is set to specify the IP addresses of all cloudcore"
@@ -130,17 +127,6 @@ stream() {
     echo $SUBJECTALTNAME > /tmp/server-extfile.cnf
 
     streamCert > /dev/null 2>&1
-#    cp /etc/kubernetes/pki/ca.crt ${caPath}/streamCA.crt
-#    echo $SUBJECTALTNAME > /tmp/server-extfile.cnf
-#
-#    openssl genrsa -out ${STREAM_KEY_FILE}  2048
-#    openssl req -new -key ${STREAM_KEY_FILE} -subj ${streamsubject} -out ${STREAM_CSR_FILE}
-#
-#    # verify
-#    openssl req -in ${STREAM_CSR_FILE} -noout -text
-#    openssl x509 -req -in ${STREAM_CSR_FILE} -CA ${K8SCA_FILE} -CAkey ${K8SCA_KEY_FILE} -CAcreateserial -out ${STREAM_CRT_FILE} -days 5000 -sha256 -extfile /tmp/server-extfile.cnf
-#    #verify
-#    openssl x509 -in ${STREAM_CRT_FILE} -text -noout
 
     appendStreamSecret
 }
