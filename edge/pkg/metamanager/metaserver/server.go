@@ -24,7 +24,7 @@ import (
 
 const (
 	// TODO: make addrs configurable
-	Httpaddr = "127.0.0.1:10550"
+	Httpaddr = "0.0.0.0:10550"
 )
 
 // MetaServer is simplification of server.GenericAPIServer
