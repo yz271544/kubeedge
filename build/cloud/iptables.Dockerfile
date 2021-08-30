@@ -8,7 +8,8 @@ RUN apk update && apk add gcc && \
     apk --no-cache add build-base linux-headers sqlite-dev binutils-gold &&\
     apk --no-cache add iptables
 
-COPY . /go/src/github.com/kubeedge/kubeedge
+WORKDIR /go/src/github.com/kubeedge/kubeedge
+COPY . .
 
 RUN CGO_ENABLED=1 go build -v -o /usr/local/bin/cloudcore -ldflags "$GO_LDFLAGS -w -s" \
 github.com/kubeedge/kubeedge/cloud/cmd/cloudcore
