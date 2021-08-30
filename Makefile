@@ -264,6 +264,10 @@ GO_LDFLAGS='$(shell hack/make-rules/version.sh)'
 cloudimage:
 	docker build --build-arg GO_LDFLAGS=${GO_LDFLAGS} -t kubeedge/cloudcore:${IMAGE_TAG} -f build/cloud/Dockerfile .
 
+.PHONY: scloudimage
+scloudimage:
+	docker build --build-arg GO_LDFLAGS=${GO_LDFLAGS} -t kubeedge/cloudcore:${IMAGE_TAG} -f build/cloud/iptables.Dockerfile .
+
 .PHONY: admissionimage
 admissionimage:
 	docker build --build-arg GO_LDFLAGS=${GO_LDFLAGS} -t kubeedge/admission:${IMAGE_TAG} -f build/admission/Dockerfile .
