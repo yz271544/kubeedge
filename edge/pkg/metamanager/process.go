@@ -16,6 +16,7 @@ import (
 	messagepkg "github.com/kubeedge/kubeedge/edge/pkg/common/message"
 	"github.com/kubeedge/kubeedge/edge/pkg/common/modules"
 	"github.com/kubeedge/kubeedge/edge/pkg/common/util"
+	"github.com/kubeedge/kubeedge/edge/pkg/metamanager/config"
 	metaManagerConfig "github.com/kubeedge/kubeedge/edge/pkg/metamanager/config"
 	"github.com/kubeedge/kubeedge/edge/pkg/metamanager/dao"
 	"github.com/kubeedge/kubeedge/edge/pkg/metamanager/metaserver/kubernetes/storage/sqlite/imitator"
@@ -132,7 +133,13 @@ func (m *metaManager) processInsert(message model.Message) {
 	}
 
 	// Notify edged
-	sendToEdged(&message, false)
+	if resType == "pod" {
+		if extractNodeNameFromPodMessageMap(&message) == config.Config.NodeName {
+			sendToEdged(&message, false)
+		}
+	} else {
+		sendToEdged(&message, false)
+	}
 
 	resp := message.NewRespByMessage(&message, OK)
 	sendToCloud(resp)
@@ -175,7 +182,13 @@ func (m *metaManager) processUpdate(message model.Message) {
 		resp := message.NewRespByMessage(&message, OK)
 		sendToEdged(resp, message.IsSync())
 	case cloudmodules.EdgeControllerModuleName, cloudmodules.DynamicControllerModuleName:
-		sendToEdged(&message, message.IsSync())
+		if resType == "pod" {
+			if extractNodeNameFromPodMessageMap(&message) == config.Config.NodeName {
+				sendToEdged(&message, message.IsSync())
+			}
+		} else {
+			sendToEdged(&message, message.IsSync())
+		}
 		resp := message.NewRespByMessage(&message, OK)
 		sendToCloud(resp)
 	case CloudFunctionModel:
@@ -476,4 +489,25 @@ func (m *metaManager) runMetaManager() {
 			m.process(msg)
 		}
 	}()
+}
+
+func extractNodeNameFromPodMessageMap(message *model.Message) (nodeNameFromResource string) {
+	content := message.GetContent()
+	var k8sResourceMap map[string]interface{}
+	var spec map[string]interface{}
+	if _, ok := content.(map[string]interface{}); ok {
+		k8sResourceMap = content.(map[string]interface{})
+	}
+	if k8sResourceMap != nil {
+		if _, ok := k8sResourceMap["spec"].(map[string]interface{}); ok {
+			spec = k8sResourceMap["spec"].(map[string]interface{})
+		}
+	}
+
+	if spec != nil {
+		if _, ok := spec["nodeName"]; ok {
+			nodeNameFromResource = spec["nodeName"].(string)[0:]
+		}
+	}
+	return
 }
